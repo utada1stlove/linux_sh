@@ -4,15 +4,13 @@ QUIC_SERVICE_NAME="linux-sh-disable-quic.service"
 QUIC_HELPER_PATH="/usr/local/lib/linux_sh/block-quic.sh"
 QUIC_SERVICE_PATH="/etc/systemd/system/${QUIC_SERVICE_NAME}"
 
-resolve_quic_block_mode() {
+ensure_quic_block_mode() {
   if [[ "${ENABLE_QUIC_BLOCK:-}" == "enabled" || "${ENABLE_QUIC_BLOCK:-}" == "disabled" ]]; then
-    printf '%s\n' "${ENABLE_QUIC_BLOCK}"
     return 0
   fi
 
   if [[ "${NON_INTERACTIVE:-0}" == "1" ]]; then
     ENABLE_QUIC_BLOCK="disabled"
-    printf '%s\n' "${ENABLE_QUIC_BLOCK}"
     return 0
   fi
 
@@ -21,8 +19,6 @@ resolve_quic_block_mode() {
   else
     ENABLE_QUIC_BLOCK="disabled"
   fi
-
-  printf '%s\n' "${ENABLE_QUIC_BLOCK}"
 }
 
 quic_rule_present() {
@@ -37,8 +33,6 @@ quic_service_ready() {
 }
 
 stage_check_youtube_quic() {
-  local desired
-
   if ((INSPECT_ONLY == 1)) && [[ -z "${ENABLE_QUIC_BLOCK:-}" ]]; then
     if quic_service_ready || quic_rule_present; then
       info "QUIC suppression is currently enabled."
@@ -48,8 +42,8 @@ stage_check_youtube_quic() {
     return 0
   fi
 
-  desired="$(resolve_quic_block_mode)"
-  if [[ "${desired}" == "disabled" ]]; then
+  ensure_quic_block_mode
+  if [[ "${ENABLE_QUIC_BLOCK}" == "disabled" ]]; then
     if quic_service_ready || quic_rule_present; then
       warn "QUIC suppression is enabled but the selected target is disabled."
       return 1
@@ -73,10 +67,10 @@ stage_check_youtube_quic() {
 }
 
 stage_apply_youtube_quic() {
-  local desired helper_script service_unit
+  local helper_script service_unit
 
-  desired="$(resolve_quic_block_mode)"
-  if [[ "${desired}" == "disabled" ]]; then
+  ensure_quic_block_mode
+  if [[ "${ENABLE_QUIC_BLOCK}" == "disabled" ]]; then
     if [[ -x "${QUIC_HELPER_PATH}" ]]; then
       run "${QUIC_HELPER_PATH}" remove || true
     fi

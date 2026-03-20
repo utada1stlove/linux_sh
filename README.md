@@ -25,25 +25,32 @@
 
 ## 使用方式
 
-需要 root 执行：
+推荐直接一键执行，不必先 `git clone`：
+
+```sh
+sudo bash <(wget -qO- https://raw.githubusercontent.com/utada1stlove/linux_sh/main/install.sh)
+```
+
+如果机器上没有 `wget`，也可以用：
+
+```sh
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/utada1stlove/linux_sh/main/install.sh)
+```
+
+常用一键执行参数：
+
+```sh
+sudo bash <(wget -qO- https://raw.githubusercontent.com/utada1stlove/linux_sh/main/install.sh) --inspect-only
+sudo bash <(wget -qO- https://raw.githubusercontent.com/utada1stlove/linux_sh/main/install.sh) --dry-run
+sudo bash <(wget -qO- https://raw.githubusercontent.com/utada1stlove/linux_sh/main/install.sh) --timezone Asia/Shanghai
+sudo bash <(wget -qO- https://raw.githubusercontent.com/utada1stlove/linux_sh/main/install.sh) --disable-quic-block
+```
+
+如果你已经把仓库下载到本地，也可以继续直接执行：
 
 ```sh
 chmod +x bootstrap.sh
 sudo ./bootstrap.sh
-```
-
-常用参数：
-
-```sh
-./bootstrap.sh --help
-./bootstrap.sh --list-stages
-sudo ./bootstrap.sh --dry-run
-sudo ./bootstrap.sh --inspect-only
-sudo ./bootstrap.sh --timezone Asia/Shanghai
-sudo ./bootstrap.sh --only timezone
-sudo ./bootstrap.sh --skip youtube-quic
-sudo ./bootstrap.sh --enable-quic-block
-sudo ./bootstrap.sh --disable-quic-block
 ```
 
 ## 阶段说明

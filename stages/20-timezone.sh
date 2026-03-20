@@ -4,19 +4,17 @@ timezone_exists() {
   [[ -e "/usr/share/zoneinfo/$1" ]]
 }
 
-resolve_timezone_selection() {
+ensure_timezone_selection() {
   local current choice custom_value
   current="$(current_timezone)"
 
   if [[ -n "${SELECTED_TIMEZONE:-}" ]]; then
     timezone_exists "${SELECTED_TIMEZONE}" || die "Unknown timezone: ${SELECTED_TIMEZONE}"
-    printf '%s\n' "${SELECTED_TIMEZONE}"
     return 0
   fi
 
   if [[ "${NON_INTERACTIVE:-0}" == "1" ]]; then
     SELECTED_TIMEZONE="${current}"
-    printf '%s\n' "${SELECTED_TIMEZONE}"
     return 0
   fi
 
@@ -72,8 +70,6 @@ EOF
     warn "Timezone not found: ${SELECTED_TIMEZONE}"
     SELECTED_TIMEZONE=""
   done
-
-  printf '%s\n' "${SELECTED_TIMEZONE}"
 }
 
 ntp_is_enabled() {
@@ -96,7 +92,7 @@ timedatectl_available() {
 }
 
 stage_check_timezone() {
-  local current target
+  local current
   local rc=0
 
   current="$(current_timezone)"
@@ -107,10 +103,10 @@ stage_check_timezone() {
     return 0
   fi
 
-  target="$(resolve_timezone_selection)"
-  info "Target timezone: ${target}"
+  ensure_timezone_selection
+  info "Target timezone: ${SELECTED_TIMEZONE}"
 
-  if [[ "${current}" != "${target}" ]]; then
+  if [[ "${current}" != "${SELECTED_TIMEZONE}" ]]; then
     warn "Timezone differs from the selected target."
     rc=1
   fi
@@ -124,17 +120,16 @@ stage_check_timezone() {
 }
 
 stage_apply_timezone() {
-  local target
-  target="$(resolve_timezone_selection)"
+  ensure_timezone_selection
 
   if timedatectl_available; then
-    run timedatectl set-timezone "${target}"
+    run timedatectl set-timezone "${SELECTED_TIMEZONE}"
   else
-    run ln -snf "/usr/share/zoneinfo/${target}" /etc/localtime
+    run ln -snf "/usr/share/zoneinfo/${SELECTED_TIMEZONE}" /etc/localtime
     if [[ "${DRY_RUN:-0}" == "1" ]]; then
       info "Would write /etc/timezone"
     else
-      printf '%s\n' "${target}" >/etc/timezone
+      printf '%s\n' "${SELECTED_TIMEZONE}" >/etc/timezone
     fi
   fi
 
