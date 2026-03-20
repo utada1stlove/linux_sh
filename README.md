@@ -8,7 +8,7 @@
 - 运行时交互选择时区，并启用 NTP
 - 配置 `vnstat` / `vnstati`，登录 SSH 时显示最近 24 小时流量摘要
 - 设置统一的 shell 提示符和 `ls --color=auto`
-- 检测 LXC，非 LXC 环境下启用 BBR
+- 检测 LXC，非 LXC 环境下启用 BBR 和保守 TCP 稳定性调优
 - 通过可选的 UDP/443 封禁来禁用 QUIC，优先让 YouTube 等场景回退到 TCP/TLS
 
 ## 目录结构
@@ -20,7 +20,7 @@
 - `stages/20-timezone.sh`：时区与 NTP
 - `stages/30-vnstat.sh`：流量统计与 SSH 登录摘要
 - `stages/40-shell.sh`：shell 提示符
-- `stages/50-bbr.sh`：BBR
+- `stages/50-bbr.sh`：BBR 与 TCP 稳定性调优
 - `stages/60-youtube.sh`：QUIC 屏蔽
 
 ## 使用方式
@@ -107,7 +107,12 @@ sudo ./bootstrap.sh
 ```conf
 net.core.default_qdisc=fq
 net.ipv4.tcp_congestion_control=bbr
+net.ipv4.tcp_mtu_probing=1
+net.ipv4.tcp_slow_start_after_idle=0
+net.ipv4.tcp_fastopen=0
 ```
+
+- 这组 TCP 参数偏保守，目标是代理和流媒体场景下的稳定性，不追求激进的建连优化
 
 ### `youtube-quic`
 

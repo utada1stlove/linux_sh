@@ -26,11 +26,14 @@ bbr_possible() {
 
 bbr_runtime_available() {
   [[ -r /proc/sys/net/core/default_qdisc ]] &&
-    [[ -r /proc/sys/net/ipv4/tcp_congestion_control ]]
+    [[ -r /proc/sys/net/ipv4/tcp_congestion_control ]] &&
+    [[ -r /proc/sys/net/ipv4/tcp_mtu_probing ]] &&
+    [[ -r /proc/sys/net/ipv4/tcp_slow_start_after_idle ]] &&
+    [[ -r /proc/sys/net/ipv4/tcp_fastopen ]]
 }
 
 stage_check_bbr() {
-  local current_qdisc current_cc
+  local current_qdisc current_cc current_mtu_probing current_slow_start_after_idle current_fastopen
 
   if bbr_is_lxc; then
     info "LXC detected; BBR stage will be skipped."
@@ -49,15 +52,21 @@ stage_check_bbr() {
 
   current_qdisc="$(< /proc/sys/net/core/default_qdisc)"
   current_cc="$(< /proc/sys/net/ipv4/tcp_congestion_control)"
+  current_mtu_probing="$(< /proc/sys/net/ipv4/tcp_mtu_probing)"
+  current_slow_start_after_idle="$(< /proc/sys/net/ipv4/tcp_slow_start_after_idle)"
+  current_fastopen="$(< /proc/sys/net/ipv4/tcp_fastopen)"
 
   if [[ "${current_qdisc}" == "fq" ]] &&
     [[ "${current_cc}" == "bbr" ]] &&
+    [[ "${current_mtu_probing}" == "1" ]] &&
+    [[ "${current_slow_start_after_idle}" == "0" ]] &&
+    [[ "${current_fastopen}" == "0" ]] &&
     [[ -f /etc/sysctl.d/99-linux-sh-bbr.conf ]]; then
-    info "BBR is configured."
+    info "BBR and TCP stability tuning are configured."
     return 0
   fi
 
-  warn "BBR is not fully configured."
+  warn "BBR or TCP stability tuning is not fully configured."
   return 1
 }
 
@@ -85,6 +94,9 @@ stage_apply_bbr() {
 
   bbr_conf='net.core.default_qdisc=fq
 net.ipv4.tcp_congestion_control=bbr
+net.ipv4.tcp_mtu_probing=1
+net.ipv4.tcp_slow_start_after_idle=0
+net.ipv4.tcp_fastopen=0
 '
   write_text_file /etc/sysctl.d/99-linux-sh-bbr.conf "${bbr_conf}"
 
@@ -93,4 +105,4 @@ net.ipv4.tcp_congestion_control=bbr
   fi
 }
 
-register_stage "bbr" "Enable BBR when the kernel and virtualization type allow it." "stage_check_bbr" "stage_apply_bbr"
+register_stage "bbr" "Enable BBR and conservative TCP stability tuning when supported." "stage_check_bbr" "stage_apply_bbr"
