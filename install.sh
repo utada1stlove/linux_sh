@@ -44,7 +44,7 @@ download_archive() {
 main() {
   local work_dir archive_path extracted_dir
 
-  [[ "${EUID}" -eq 0 ]] || die "Run as root. Example: sudo bash <(wget -qO- https://raw.githubusercontent.com/${LINUX_SH_REPO_OWNER}/${LINUX_SH_REPO_NAME}/${LINUX_SH_REF}/install.sh)"
+  [[ "${EUID}" -eq 0 ]] || die "Run as root. Example: wget -qO- https://raw.githubusercontent.com/${LINUX_SH_REPO_OWNER}/${LINUX_SH_REPO_NAME}/${LINUX_SH_REF}/install.sh | sudo bash"
 
   need_command bash
   need_command tar

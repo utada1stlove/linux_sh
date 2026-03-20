@@ -28,22 +28,22 @@
 推荐直接一键执行，不必先 `git clone`：
 
 ```sh
-sudo bash <(wget -qO- https://raw.githubusercontent.com/utada1stlove/linux_sh/main/install.sh)
+wget -qO- https://raw.githubusercontent.com/utada1stlove/linux_sh/main/install.sh | sudo bash
 ```
 
 如果机器上没有 `wget`，也可以用：
 
 ```sh
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/utada1stlove/linux_sh/main/install.sh)
+curl -fsSL https://raw.githubusercontent.com/utada1stlove/linux_sh/main/install.sh | sudo bash
 ```
 
 常用一键执行参数：
 
 ```sh
-sudo bash <(wget -qO- https://raw.githubusercontent.com/utada1stlove/linux_sh/main/install.sh) --inspect-only
-sudo bash <(wget -qO- https://raw.githubusercontent.com/utada1stlove/linux_sh/main/install.sh) --dry-run
-sudo bash <(wget -qO- https://raw.githubusercontent.com/utada1stlove/linux_sh/main/install.sh) --timezone Asia/Shanghai
-sudo bash <(wget -qO- https://raw.githubusercontent.com/utada1stlove/linux_sh/main/install.sh) --disable-quic-block
+wget -qO- https://raw.githubusercontent.com/utada1stlove/linux_sh/main/install.sh | sudo bash -s -- --inspect-only
+wget -qO- https://raw.githubusercontent.com/utada1stlove/linux_sh/main/install.sh | sudo bash -s -- --dry-run
+wget -qO- https://raw.githubusercontent.com/utada1stlove/linux_sh/main/install.sh | sudo bash -s -- --timezone Asia/Shanghai
+wget -qO- https://raw.githubusercontent.com/utada1stlove/linux_sh/main/install.sh | sudo bash -s -- --disable-quic-block
 ```
 
 如果你已经把仓库下载到本地，也可以继续直接执行：
