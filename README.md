@@ -46,6 +46,27 @@ wget -qO- https://raw.githubusercontent.com/utada1stlove/linux_sh/main/install.s
 wget -qO- https://raw.githubusercontent.com/utada1stlove/linux_sh/main/install.sh | sudo bash -s -- --disable-quic-block
 ```
 
+### 中国大陆镜像一键执行
+
+如果直连 GitHub 较慢，可以使用 jsDelivr 的 GitHub CDN 路径：
+
+```sh
+wget -qO- https://cdn.jsdelivr.net/gh/utada1stlove/linux_sh@main/install.sh | sudo env LINUX_SH_FILE_BASE_URL=https://cdn.jsdelivr.net/gh/utada1stlove/linux_sh@main bash
+```
+
+带参数时这样写：
+
+```sh
+wget -qO- https://cdn.jsdelivr.net/gh/utada1stlove/linux_sh@main/install.sh | sudo env LINUX_SH_FILE_BASE_URL=https://cdn.jsdelivr.net/gh/utada1stlove/linux_sh@main bash -s -- --inspect-only
+wget -qO- https://cdn.jsdelivr.net/gh/utada1stlove/linux_sh@main/install.sh | sudo env LINUX_SH_FILE_BASE_URL=https://cdn.jsdelivr.net/gh/utada1stlove/linux_sh@main bash -s -- --dry-run
+wget -qO- https://cdn.jsdelivr.net/gh/utada1stlove/linux_sh@main/install.sh | sudo env LINUX_SH_FILE_BASE_URL=https://cdn.jsdelivr.net/gh/utada1stlove/linux_sh@main bash -s -- --timezone Asia/Shanghai
+```
+
+说明：
+
+- 这套镜像模式会逐个下载 `bootstrap.sh`、`lib/`、`stages/` 文件，不依赖 GitHub 归档下载
+- CDN 可能存在缓存延迟；如果刚 push 完最新提交，镜像路径可能不会立刻刷新
+
 如果你已经把仓库下载到本地，也可以继续直接执行：
 
 ```sh
