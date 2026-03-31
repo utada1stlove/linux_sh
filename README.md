@@ -8,8 +8,8 @@
 - 运行时交互选择时区，并启用 NTP
 - 配置 `vnstat` / `vnstati`，登录 SSH 时显示最近 24 小时流量摘要
 - 设置统一的 shell 提示符和 `ls --color=auto`
-- 检测 LXC，非 LXC 环境下启用 BBR 和保守 TCP 稳定性调优
-- 通过可选的 UDP/443 封禁来禁用 QUIC，优先让 YouTube 等场景回退到 TCP/TLS
+- 检测 LXC，若为 LXC 容器则在预检查阶段直接停止
+- 通过可选的 UDP/443 封禁同时限制 `INPUT` 和 `OUTPUT`，优先让 YouTube 等场景回退到 TCP/TLS
 
 ## 目录结构
 
@@ -81,6 +81,7 @@ sudo ./bootstrap.sh
 - 检查 root、`apt-get`、`dpkg`、`systemctl`
 - 检查系统是否为 Debian 系
 - 输出虚拟化类型，供后续 BBR 阶段使用
+- 若检测到 LXC / LXC-libvirt，则直接终止后续执行
 
 ### `packages`
 
@@ -104,6 +105,7 @@ sudo ./bootstrap.sh
 - 支持 `--timezone` 直接指定
 - 非交互模式且未指定时区时，保持当前时区不变
 - 会尝试开启 `timedatectl set-ntp true`
+- 会额外检查系统时钟是否已经完成同步
 
 ### `vnstat`
 
@@ -111,6 +113,7 @@ sudo ./bootstrap.sh
 - 自动识别默认出接口并初始化数据库
 - 写入 `/usr/local/lib/linux_sh/vnstat-login.sh`
 - 写入 `/etc/profile.d/40-linux-sh-vnstat.sh`
+- 追加 `/etc/bash.bashrc` 钩子，覆盖 Debian 常见 SSH 交互 shell 路径
 - SSH 登录时显示最近 24 小时文本流量信息，并在可用时生成 `vnstati` 图片到 `/var/tmp/linux_sh/`
 
 ### `shell`
@@ -140,7 +143,7 @@ net.ipv4.tcp_fastopen=0
 - 这是可选阶段
 - 默认交互执行时会询问是否启用
 - 启用后会创建 `linux-sh-disable-quic.service`
-- 服务通过 `iptables` 持久化阻断出站 `UDP/443`
+- 服务通过 `iptables` 持久化阻断入站和出站 `UDP/443`
 - 这是系统级 QUIC 屏蔽，不只针对 YouTube
 
 ## 建议执行顺序

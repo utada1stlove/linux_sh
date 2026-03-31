@@ -28,10 +28,13 @@ stage_check_preflight() {
     rc=1
   fi
 
-  if command_exists systemd-detect-virt; then
-    virtualization="$(systemd-detect-virt 2>/dev/null || true)"
-  fi
+  virtualization="$(virtualization_type)"
   info "Virtualization: ${virtualization:-none}"
+
+  if is_lxc_container; then
+    warn "LXC detected. linux_sh stops here to avoid applying host-level tuning inside a container."
+    rc=1
+  fi
 
   command_exists apt-get || {
     warn "apt-get is required."

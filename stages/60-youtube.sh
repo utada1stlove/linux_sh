@@ -23,6 +23,7 @@ ensure_quic_block_mode() {
 
 quic_rule_present() {
   command_exists iptables &&
+    iptables -w -C INPUT -p udp --dport 443 -j REJECT >/dev/null 2>&1 &&
     iptables -w -C OUTPUT -p udp --dport 443 -j REJECT >/dev/null 2>&1
 }
 
@@ -95,11 +96,17 @@ fi
 
 case "${action}" in
   add)
+    if ! iptables -w -C INPUT -p udp --dport 443 -j REJECT >/dev/null 2>&1; then
+      iptables -w -A INPUT -p udp --dport 443 -j REJECT
+    fi
     if ! iptables -w -C OUTPUT -p udp --dport 443 -j REJECT >/dev/null 2>&1; then
       iptables -w -A OUTPUT -p udp --dport 443 -j REJECT
     fi
     ;;
   remove)
+    while iptables -w -C INPUT -p udp --dport 443 -j REJECT >/dev/null 2>&1; do
+      iptables -w -D INPUT -p udp --dport 443 -j REJECT
+    done
     while iptables -w -C OUTPUT -p udp --dport 443 -j REJECT >/dev/null 2>&1; do
       iptables -w -D OUTPUT -p udp --dport 443 -j REJECT
     done
@@ -136,4 +143,4 @@ WantedBy=multi-user.target
   fi
 }
 
-register_stage "youtube-quic" "Optionally block outbound UDP/443 to disable QUIC." "stage_check_youtube_quic" "stage_apply_youtube_quic"
+register_stage "youtube-quic" "Optionally block INPUT/OUTPUT UDP/443 to disable QUIC." "stage_check_youtube_quic" "stage_apply_youtube_quic"

@@ -144,3 +144,19 @@ default_interface() {
   iface="$(ip -o route show default 2>/dev/null | awk 'NR == 1 { print $5 }' || true)"
   printf '%s\n' "${iface}"
 }
+
+virtualization_type() {
+  if command_exists systemd-detect-virt; then
+    systemd-detect-virt 2>/dev/null || true
+  fi
+}
+
+is_lxc_container() {
+  case "$(virtualization_type)" in
+    lxc|lxc-libvirt)
+      return 0
+      ;;
+  esac
+
+  return 1
+}

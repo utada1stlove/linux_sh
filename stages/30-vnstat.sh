@@ -15,6 +15,11 @@ vnstat_service_ready() {
     systemctl is-active --quiet vnstat.service
 }
 
+vnstat_bashrc_hook_present() {
+  [[ -f /etc/bash.bashrc ]] &&
+    grep -Fq 'linux_sh vnstat login hook' /etc/bash.bashrc
+}
+
 stage_check_vnstat() {
   local iface
   local rc=0
@@ -49,6 +54,11 @@ stage_check_vnstat() {
 
   [[ -f /etc/profile.d/40-linux-sh-vnstat.sh ]] || {
     warn "Missing /etc/profile.d/40-linux-sh-vnstat.sh"
+    rc=1
+  }
+
+  vnstat_bashrc_hook_present || {
+    warn "Missing linux_sh vnstat hook in /etc/bash.bashrc"
     rc=1
   }
 
@@ -90,6 +100,8 @@ set -Eeuo pipefail
 
 [[ $- == *i* ]] || exit 0
 [[ -n "${SSH_CONNECTION:-}${SSH_TTY:-}" ]] || exit 0
+[[ "${LINUX_SH_VNSTAT_SHOWN:-0}" == "1" ]] && exit 0
+export LINUX_SH_VNSTAT_SHOWN=1
 
 iface="$(ip -o route show default 2>/dev/null | awk '"'"'NR == 1 { print $5 }'"'"')"
 [[ -n "${iface}" ]] || exit 0
@@ -116,6 +128,24 @@ if [[ $- == *i* ]] && [[ -n "${SSH_CONNECTION:-}${SSH_TTY:-}" ]] && [[ -x /usr/l
 fi
 '
   write_text_file /etc/profile.d/40-linux-sh-vnstat.sh "${profile_script}"
+
+  if [[ "${DRY_RUN:-0}" == "1" ]]; then
+    info "Would ensure /etc/bash.bashrc sources linux_sh vnstat helper for SSH sessions"
+  else
+    if [[ ! -f /etc/bash.bashrc ]]; then
+      printf '%s\n' '# system-wide .bashrc' >/etc/bash.bashrc
+    fi
+
+    if ! vnstat_bashrc_hook_present; then
+      cat >>/etc/bash.bashrc <<'EOF'
+
+# linux_sh vnstat login hook
+if [[ $- == *i* ]] && [[ -n "${SSH_CONNECTION:-}${SSH_TTY:-}" ]] && [[ -x /usr/local/lib/linux_sh/vnstat-login.sh ]]; then
+  /usr/local/lib/linux_sh/vnstat-login.sh || true
+fi
+EOF
+    fi
+  fi
 }
 
 register_stage "vnstat" "Enable vnstat and show SSH login traffic summaries." "stage_check_vnstat" "stage_apply_vnstat"

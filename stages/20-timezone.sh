@@ -86,6 +86,20 @@ ntp_is_enabled() {
   return 1
 }
 
+clock_is_synchronized() {
+  if command_exists timedatectl && timedatectl show -p NTPSynchronized --value >/dev/null 2>&1; then
+    [[ "$(timedatectl show -p NTPSynchronized --value 2>/dev/null || true)" == "yes" ]]
+    return
+  fi
+
+  if command_exists timedatectl && timedatectl show -p SystemClockSynchronized --value >/dev/null 2>&1; then
+    [[ "$(timedatectl show -p SystemClockSynchronized --value 2>/dev/null || true)" == "yes" ]]
+    return
+  fi
+
+  return 1
+}
+
 timedatectl_available() {
   command_exists timedatectl &&
     timedatectl show -p Timezone --value >/dev/null 2>&1
@@ -100,6 +114,7 @@ stage_check_timezone() {
 
   if ((INSPECT_ONLY == 1)) && [[ -z "${SELECTED_TIMEZONE:-}" ]]; then
     ntp_is_enabled && info "NTP: enabled." || warn "NTP: not confirmed."
+    clock_is_synchronized && info "Clock sync: confirmed." || warn "Clock sync: not confirmed."
     return 0
   fi
 
@@ -113,6 +128,11 @@ stage_check_timezone() {
 
   if ! ntp_is_enabled; then
     warn "NTP is not enabled."
+    rc=1
+  fi
+
+  if ! clock_is_synchronized; then
+    warn "The system clock is not synchronized yet."
     rc=1
   fi
 
@@ -139,6 +159,7 @@ stage_apply_timezone() {
 
   if command_exists systemctl && systemctl list-unit-files systemd-timesyncd.service >/dev/null 2>&1; then
     run systemctl enable --now systemd-timesyncd.service || true
+    run systemctl restart systemd-timesyncd.service || true
   fi
 }
 

@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 
 bbr_virtualization() {
-  if command_exists systemd-detect-virt; then
-    systemd-detect-virt --container 2>/dev/null || true
-  fi
+  virtualization_type
 }
 
 bbr_is_lxc() {

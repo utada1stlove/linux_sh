@@ -25,8 +25,8 @@ Options:
   --inspect-only          Run stage inspections without applying changes.
   --non-interactive       Never prompt; keep current timezone unless --timezone is set.
   --timezone <TZ>         Set the target timezone explicitly.
-  --enable-quic-block     Enable outbound UDP/443 blocking for QUIC suppression.
-  --disable-quic-block    Disable outbound UDP/443 blocking.
+  --enable-quic-block     Enable INPUT/OUTPUT UDP/443 blocking for QUIC suppression.
+  --disable-quic-block    Disable INPUT/OUTPUT UDP/443 blocking.
   --only <ids>            Run only the listed comma-separated stage ids.
   --skip <ids>            Skip the listed comma-separated stage ids.
   --list-stages           Print the discovered stages and exit.
