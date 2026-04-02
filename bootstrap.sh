@@ -15,6 +15,7 @@ SELECTED_TIMEZONE="${BOOTSTRAP_TIMEZONE:-}"
 ENABLE_QUIC_BLOCK="${BOOTSTRAP_QUIC_BLOCK:-}"
 ONLY_STAGES=()
 SKIP_STAGES=()
+LXC_MODE=0
 
 usage() {
   cat <<'EOF'
@@ -130,6 +131,27 @@ stage_requested() {
   return 0
 }
 
+stage_allowed_in_lxc() {
+  local stage_id="$1"
+
+  case "${stage_id}" in
+    preflight|shell)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+stage_forced_skip_in_lxc() {
+  local stage_id="$1"
+
+  ((LXC_MODE == 1)) || return 1
+  stage_allowed_in_lxc "${stage_id}" && return 1
+  return 0
+}
+
 list_stages() {
   local idx
   for idx in "${!STAGE_IDS[@]}"; do
@@ -146,6 +168,11 @@ run_baseline_checks() {
     stage_id="${STAGE_IDS[$idx]}"
     stage_desc="${STAGE_DESCRIPTIONS[$idx]}"
     check_fn="${STAGE_CHECK_FUNCS[$idx]}"
+
+    if stage_forced_skip_in_lxc "${stage_id}"; then
+      info "Skipping ${stage_id}: LXC mode only keeps preflight and shell."
+      continue
+    fi
 
     if ! stage_requested "${stage_id}"; then
       info "Skipping ${stage_id}: filtered out by --only/--skip."
@@ -173,6 +200,10 @@ apply_requested_stages() {
     stage_desc="${STAGE_DESCRIPTIONS[$idx]}"
     apply_fn="${STAGE_APPLY_FUNCS[$idx]}"
 
+    if stage_forced_skip_in_lxc "${stage_id}"; then
+      continue
+    fi
+
     if ! stage_requested "${stage_id}"; then
       continue
     fi
@@ -196,6 +227,10 @@ run_final_checks() {
     stage_desc="${STAGE_DESCRIPTIONS[$idx]}"
     check_fn="${STAGE_CHECK_FUNCS[$idx]}"
 
+    if stage_forced_skip_in_lxc "${stage_id}"; then
+      continue
+    fi
+
     if ! stage_requested "${stage_id}"; then
       continue
     fi
@@ -210,6 +245,11 @@ main() {
 
   parse_args "$@"
   load_stages
+
+  if is_lxc_container; then
+    LXC_MODE=1
+    warn "LXC detected. linux_sh will continue in limited mode and only apply the shell prompt stage."
+  fi
 
   if ((LIST_STAGES == 1)); then
     list_stages

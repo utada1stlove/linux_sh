@@ -8,7 +8,7 @@
 - 运行时交互选择时区，并启用 NTP
 - 配置 `vnstat` / `vnstati`，登录 SSH 时显示最近 24 小时流量摘要
 - 设置统一的 shell 提示符和 `ls --color=auto`
-- 检测 LXC，若为 LXC 容器则在预检查阶段直接停止
+- 检测 LXC，若为 LXC 容器则进入受限模式，只保留 `shell` 阶段
 - 通过可选的 UDP/443 封禁同时限制 `INPUT` 和 `OUTPUT`，优先让 YouTube 等场景回退到 TCP/TLS
 
 ## 目录结构
@@ -81,7 +81,7 @@ sudo ./bootstrap.sh
 - 检查 root、`apt-get`、`dpkg`、`systemctl`
 - 检查系统是否为 Debian 系
 - 输出虚拟化类型，供后续 BBR 阶段使用
-- 若检测到 LXC / LXC-libvirt，则直接终止后续执行
+- 若检测到 LXC / LXC-libvirt，则切换到受限模式，只继续执行 `shell`
 
 ### `packages`
 
@@ -121,6 +121,7 @@ sudo ./bootstrap.sh
 - 写入 `/etc/profile.d/20-linux-sh-shell.sh`
 - 使用和 README 原始风格接近的彩色提示符
 - 主机名改为动态 `\h`，不硬编码固定名字
+- 在 LXC 里，这一阶段仍然会执行
 
 ### `bbr`
 
@@ -153,6 +154,13 @@ net.ipv4.tcp_fastopen=0
 3. `sudo ./bootstrap.sh`
 4. 重新 SSH 登录，确认 `vnstat` 摘要和 shell 提示符
 5. 检查 `sysctl net.ipv4.tcp_congestion_control` 与 QUIC 服务状态
+
+## LXC 行为
+
+- 检测到 LXC 后，不再整套退出
+- 当前只保留 `preflight` 和 `shell`
+- `packages`、`timezone`、`vnstat`、`bbr`、`youtube-quic` 会被跳过
+- 这样可以继续拿到统一提示符，但避免把宿主机级调优硬塞进容器
 
 ## 五轮检查建议
 

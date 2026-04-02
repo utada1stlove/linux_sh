@@ -32,8 +32,7 @@ stage_check_preflight() {
   info "Virtualization: ${virtualization:-none}"
 
   if is_lxc_container; then
-    warn "LXC detected. linux_sh stops here to avoid applying host-level tuning inside a container."
-    rc=1
+    warn "LXC detected. linux_sh will stay in limited mode: only preflight and shell prompt configuration will run."
   fi
 
   command_exists apt-get || {
