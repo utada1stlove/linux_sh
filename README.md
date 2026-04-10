@@ -8,6 +8,7 @@
 - 运行时交互选择时区，并启用 NTP
 - 配置 `vnstat` / `vnstati`，登录 SSH 时显示最近 24 小时流量摘要
 - 设置统一的 shell 提示符和 `ls --color=auto`
+- 尽量补齐 `kitty` / `ghostty` 的终端兼容；缺失 terminfo 时自动回退到 `xterm-256color`
 - 检测 LXC，若为 LXC 容器则进入受限模式，只保留 `shell` 阶段
 - 通过可选的 UDP/443 封禁同时限制 `INPUT` 和 `OUTPUT`，优先让 YouTube 等场景回退到 TCP/TLS
 
@@ -119,9 +120,13 @@ sudo ./bootstrap.sh
 ### `shell`
 
 - 写入 `/etc/profile.d/20-linux-sh-shell.sh`
+- 写入 `/usr/local/lib/linux_sh/shell-helper.sh`
+- 追加 `/etc/bash.bashrc` 钩子，覆盖 Debian 常见交互 bash 路径
 - 使用和 README 原始风格接近的彩色提示符
 - 主机名改为动态 `\h`，不硬编码固定名字
 - 在 LXC 里，这一阶段仍然会执行
+- 若仓库源里存在 `kitty-terminfo` / `ncurses-term`，会尽量安装
+- 若远端缺失 `xterm-kitty` 或 `xterm-ghostty` terminfo，则自动把 `TERM` 回退到 `xterm-256color`
 
 ### `bbr`
 
